@@ -155,6 +155,23 @@ class PlayerController @Inject constructor(
         }
     }
 
+    // Episodes are ordered newest first in EpisodeDao.
+    // Next means the next older episode; Previous means the newer episode.
+    fun playAdjacentEpisode(next: Boolean) {
+        val currentGuid = controller?.currentMediaItem?.mediaId ?: _state.value.currentGuid ?: return
+        scope.launch {
+            val adjacent = withContext(Dispatchers.IO) {
+                val current = episodeDao.getByGuid(currentGuid) ?: return@withContext null
+                val episodes = episodeDao.getForPodcastOnce(current.podcastFeedUrl)
+                val index = episodes.indexOfFirst { it.guid == currentGuid }
+                if (index < 0) return@withContext null
+                val adjacentIndex = if (next) index + 1 else index - 1
+                episodes.getOrNull(adjacentIndex)
+            }
+            if (adjacent != null) playEpisode(adjacent)
+        }
+    }
+
     fun playPause() {
         controller?.let { if (it.isPlaying) it.pause() else it.play() }
     }

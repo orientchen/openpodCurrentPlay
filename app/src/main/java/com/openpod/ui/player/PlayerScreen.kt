@@ -17,6 +17,8 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Forward30
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,7 +57,9 @@ fun PlayerScreen(
         onPlayPause = viewModel::playPause,
         onSeekBack = viewModel::seekBack,
         onSeekForward = viewModel::seekForward,
-        onSeekTo = viewModel::seekTo
+        onSeekTo = viewModel::seekTo,
+        onNextEpisode = viewModel::nextEpisode,
+        onPreviousEpisode = viewModel::previousEpisode
     )
 }
 
@@ -66,7 +70,9 @@ private fun PlayerScreenContent(
     onPlayPause: () -> Unit,
     onSeekBack: () -> Unit,
     onSeekForward: () -> Unit,
-    onSeekTo: (Long) -> Unit
+    onSeekTo: (Long) -> Unit,
+    onNextEpisode: () -> Unit,
+    onPreviousEpisode: () -> Unit
 ) {
     var sliderValue by remember { mutableFloatStateOf(0f) }
     var isDragging by remember { mutableStateOf(false) }
@@ -160,6 +166,9 @@ private fun PlayerScreenContent(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            IconButton(onClick = onPreviousEpisode, enabled = state.hasMedia) {
+                Icon(Icons.Default.SkipPrevious, contentDescription = "Previous episode")
+            }
             IconButton(onClick = onSeekBack) {
                 Icon(
                     Icons.Default.Replay10,
@@ -187,6 +196,9 @@ private fun PlayerScreenContent(
                     contentDescription = "Forward 30s",
                     modifier = Modifier.size(36.dp)
                 )
+            }
+            IconButton(onClick = onNextEpisode, enabled = state.hasMedia) {
+                Icon(Icons.Default.SkipNext, contentDescription = "Next episode")
             }
         }
     }

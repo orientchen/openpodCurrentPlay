@@ -1,5 +1,6 @@
 package com.openpod.ui.episodes
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -8,8 +9,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -20,7 +23,9 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,6 +40,7 @@ import com.openpod.ui.player.PlayerViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,20 +52,49 @@ fun EpisodeListScreen(
 ) {
     val episodes by viewModel.episodes.collectAsStateWithLifecycle()
     val playerState by playerViewModel.state.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val currentIndex = episodes.indexOfFirst { it.guid == playerState.currentGuid }
+
+    // When this screen opens (or the episode data first loads), locate the
+    // currently selected episode. Do not re-scroll on every playback tick.
+    LaunchedEffect(episodes, playerState.currentGuid) {
+        if (currentIndex >= 0) {
+            listState.scrollToItem(currentIndex)
+        }
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(viewModel.feedUrl) },
+                title = { Text("OpenPod TEST V2") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    if (currentIndex >= 0) {
+                        IconButton(
+                            onClick = {
+                                coroutineScope.launch {
+                                    listState.animateScrollToItem(currentIndex)
+                                }
+                            }
+                        ) {
+                            Icon(
+                                Icons.Filled.MyLocation,
+                                contentDescription = "Jump to playing episode"
+                            )
+                        }
                     }
                 }
             )
         }
     ) { padding ->
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
@@ -68,6 +103,7 @@ fun EpisodeListScreen(
                 EpisodeItem(
                     episode = episode,
                     isPlaying = playerState.currentGuid == episode.guid && playerState.isPlaying,
+                    isCurrent = playerState.currentGuid == episode.guid,
                     onPlay = { onPlayEpisode(episode) },
                     onPause = { playerViewModel.playPause() },
                     onDownload = { viewModel.download(episode) },
@@ -83,12 +119,20 @@ fun EpisodeListScreen(
 private fun EpisodeItem(
     episode: Episode,
     isPlaying: Boolean,
+    isCurrent: Boolean,
     onPlay: () -> Unit,
     onPause: () -> Unit,
     onDownload: () -> Unit,
     onCancelDownload: () -> Unit
 ) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                if (isCurrent) MaterialTheme.colorScheme.primaryContainer
+                else MaterialTheme.colorScheme.surface
+            )
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -156,4 +200,3 @@ private fun formatDate(pubDate: Long): String? {
     if (pubDate == 0L) return null
     return SimpleDateFormat("MMM d, yyyy", Locale.getDefault()).format(Date(pubDate))
 }
-

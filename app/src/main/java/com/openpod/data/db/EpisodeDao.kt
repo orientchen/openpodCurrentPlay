@@ -34,6 +34,9 @@ interface EpisodeDao {
     """)
     suspend fun getAllRecentOnce(): List<EpisodeWithPodcast>
 
+    @Query("SELECT DISTINCT podcastFeedUrl FROM episodes ORDER BY podcastFeedUrl")
+    suspend fun getPodcastFeedUrlsOnce(): List<String>
+
     @Query("SELECT * FROM episodes WHERE podcastFeedUrl = :feedUrl ORDER BY pubDate DESC")
     fun getForPodcast(feedUrl: String): Flow<List<Episode>>
 

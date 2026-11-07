@@ -12,6 +12,8 @@ class PlayerViewModel @Inject constructor(
     private val playerController: PlayerController
 ) : ViewModel() {
     val state: StateFlow<PlayerState> = playerController.state
+    fun nextEpisode() = playerController.playAdjacentEpisode(next = true)
+    fun previousEpisode() = playerController.playAdjacentEpisode(next = false)
     fun playPause() = playerController.playPause()
     fun seekForward() = playerController.seekForward()
     fun seekBack() = playerController.seekBack()
