@@ -9,9 +9,18 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -58,7 +67,8 @@ fun PlayHistoryContent(
                     onPlay = { onPlayEpisode(item.episode) },
                     onPause = { playerViewModel.playPause() },
                     onDownload = { viewModel.download(item.episode) },
-                    onCancelDownload = { viewModel.cancelDownload(item.episode) }
+                    onCancelDownload = { viewModel.cancelDownload(item.episode) },
+                    onRemoveFromHistory = { viewModel.removeFromHistory(item.episode) }
                 )
                 HorizontalDivider()
             }
@@ -73,9 +83,11 @@ private fun PlayHistoryItem(
     onPlay: () -> Unit,
     onPause: () -> Unit,
     onDownload: () -> Unit,
-    onCancelDownload: () -> Unit
+    onCancelDownload: () -> Unit,
+    onRemoveFromHistory: () -> Unit
 ) {
     val episode = item.episode
+    var menuExpanded by remember { mutableStateOf(false) }
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -117,6 +129,20 @@ private fun PlayHistoryItem(
             onPlay = onPlay,
             onPause = onPause
         )
+        Box {
+            IconButton(onClick = { menuExpanded = true }) {
+                Icon(Icons.Filled.MoreVert, contentDescription = "History options")
+            }
+            DropdownMenu(expanded = menuExpanded, onDismissRequest = { menuExpanded = false }) {
+                DropdownMenuItem(
+                    text = { Text("Remove from History") },
+                    onClick = {
+                        menuExpanded = false
+                        onRemoveFromHistory()
+                    }
+                )
+            }
+        }
     }
 }
 
