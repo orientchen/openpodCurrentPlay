@@ -28,6 +28,8 @@ class PodcastRepository @Inject constructor(
 
     fun getPlayHistory(): Flow<List<EpisodeWithPodcast>> = episodeDao.getPlayHistory()
 
+    suspend fun removeFromHistory(guid: String) = episodeDao.removeFromHistory(guid)
+
     suspend fun addPodcast(feedUrl: String) {
         val feed = parser.parse(fetcher.fetch(feedUrl))
         podcastDao.insert(Podcast(
