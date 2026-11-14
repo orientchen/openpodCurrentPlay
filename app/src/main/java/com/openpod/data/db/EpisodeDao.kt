@@ -76,6 +76,9 @@ interface EpisodeDao {
     """)
     fun getAllDownloads(): Flow<List<EpisodeWithPodcast>>
 
+    @Query("UPDATE episodes SET lastPlayedAt = 0 WHERE guid = :guid")
+    suspend fun removeFromHistory(guid: String)
+
     @Query("SELECT * FROM episodes WHERE downloadId = :downloadId LIMIT 1")
     suspend fun getByDownloadId(downloadId: Long): Episode?
 
